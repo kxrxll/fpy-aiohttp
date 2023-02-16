@@ -1,0 +1,7 @@
+pip==23
+setuptools==67.3.2
+wheel==0.38.4
+Flask~=2.2.3
+SQLAlchemy==1.4.46
+psycopg2~=2.9.5
+requests~=2.28.2
