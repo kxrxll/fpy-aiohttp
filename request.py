@@ -1,24 +1,26 @@
-import requests
+import aiohttp
+import asyncio
 
-response_1 = requests.post(
-    "http://127.0.0.1:5001/ads/",
-    json={
-        "heading": "Something",
-        "description": "Some text about something",
-        "creator": "Myself"
-    }
-)
 
-print(response_1.status_code)
-ad_id = response_1.json()['id']
-print(ad_id)
+async def send_request():
+    async with aiohttp.ClientSession() as session:
+        async with session.post("http://127.0.0.1:8080/ads/",
+                                json={
+                                    "heading": "Something",
+                                    "description": "Some text about something",
+                                    "creator": "Myself"
+                                }) as resp:
+            print(resp.status)
+            creation_result = await resp.json()
+            print(creation_result)
+            ad_id = creation_result['id']
+        async with session.get(f"http://127.0.0.1:8080/ads/{ad_id}") as resp:
+            print(resp.status)
+            creation_result = await resp.json()
+            print(creation_result)
+        async with session.delete(f"http://127.0.0.1:8080/ads/{ad_id}") as resp:
+            print(resp.status)
+            creation_result = await resp.json()
+            print(creation_result)
 
-response_2 = requests.get(f"http://127.0.0.1:5001/ads/{ad_id}")
-
-print(response_2.status_code)
-print(response_2.json())
-
-response_3 = requests.delete(f"http://127.0.0.1:5001/ads/{ad_id}")
-
-print(response_3.status_code)
-print(response_3.json())
+asyncio.run(send_request())

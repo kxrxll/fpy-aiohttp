@@ -1,49 +1,48 @@
-from flask import Flask, jsonify, request
-from flask.views import MethodView
 from db import Ad, Session
+from aiohttp import web
 
-app = Flask('app')
+routes = web.RouteTableDef()
 
 
-class Ads(MethodView):
-    def get(self, ad_id: int):
+@routes.view('/ads/{ad_id}')
+class Ads_get_delete(web.View):
+    async def get(self):
+        ad_id = self.request.match_info['ad_id']
         with Session() as session:
             ad = session.query(Ad).get(ad_id)
             session.commit()
-            return jsonify({
+            return web.json_response({
                 'Heading': ad.heading,
                 'Description': ad.description
             })
 
-    def post(self):
-        json_data = request.json
-        with Session() as session:
-            new_ad = Ad(**json_data)
-            session.add(new_ad)
-            session.commit()
-            return jsonify({
-                'id': new_ad.id,
-                'created at': int(new_ad.date.timestamp())
-            })
-
-    def delete(self, ad_id: int):
+    async def delete(self):
+        ad_id = self.request.match_info['ad_id']
         with Session() as session:
             ad = session.query(Ad).get(ad_id)
             session.delete(ad)
             session.commit()
-            return jsonify({
+            return web.json_response({
                 'status': 'ok'
             })
 
 
-app.add_url_rule('/ads/<int:ad_id>',
-                 view_func=Ads.as_view('ads'),
-                 methods=['GET', 'DELETE']
-                 )
-app.add_url_rule('/ads/',
-                 view_func=Ads.as_view('ads_add'),
-                 methods=['POST']
-                 )
+@routes.view('/ads/')
+class Ads_post(web.View):
+    async def post(self):
+        json_data = await self.request.json()
+        print(json_data)
+        with Session() as session:
+            new_ad = Ad(**json_data)
+            session.add(new_ad)
+            session.commit()
+            return web.json_response({
+                'id': new_ad.id,
+                'created at': int(new_ad.date.timestamp())
+            })
+
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5001)
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app)
